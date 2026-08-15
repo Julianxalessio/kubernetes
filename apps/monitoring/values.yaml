@@ -30,6 +30,13 @@ kube-prometheus-stack:
                 storage: 20Gi
             # storageClassName: standard   # ggf. eure StorageClass eintragen
 
+    # k3s bringt einen eingebauten LoadBalancer (ServiceLB/Klipper) mit,
+    # der die Node-IP direkt nutzt - kein Cloud-LB nötig.
+    # WICHTIG: Port 9090 muss zusätzlich in iptables (INPUT-Chain) UND in der
+    # OCI Security List/NSG freigegeben werden, siehe README.
+    service:
+      type: LoadBalancer
+
   # ---------------- Grafana ----------------
   grafana:
     enabled: true
@@ -40,7 +47,7 @@ kube-prometheus-stack:
       size: 5Gi
 
     service:
-      type: ClusterIP   # per Ingress nach außen geben, siehe ingress.yaml
+      type: LoadBalancer   # ebenfalls über k3s ServiceLB, Port 80 im Service (siehe README)
 
     # Grafana bringt Prometheus als Datasource automatisch mit,
     # weil sameNamespace-Datasource vom Chart automatisch angelegt wird.

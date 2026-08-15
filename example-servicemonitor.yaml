@@ -1,0 +1,22 @@
+# ServiceMonitor sucht nach SERVICES (nicht direkt Pods!) mit passenden Labels
+# und scraped dann die dahinterliegenden Pods.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: my-app-metrics
+  namespace: monitoring          # kann auch im NS der App liegen, s. values.yaml Selector
+  labels:
+    release: kube-prometheus-stack   # optional, falls ihr den Selector wieder einschränkt
+spec:
+  namespaceSelector:
+    matchNames:
+      - default                  # Namespace(s), in denen eure App-Services laufen
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/monitor: "true"   # Service muss dieses Label haben
+
+  endpoints:
+    - port: metrics               # muss dem "name:" im Service-Port entsprechen
+      path: /metrics
+      interval: 30s

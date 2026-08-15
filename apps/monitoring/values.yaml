@@ -1,0 +1,55 @@
+kube-prometheus-stack:
+
+  # ---------------- Prometheus ----------------
+  prometheus:
+    prometheusSpec:
+      # WICHTIG: erlaubt Prometheus, ServiceMonitors aus ALLEN Namespaces zu finden.
+      # Ohne das findet er nur ServiceMonitors mit passendem "release"-Label im eigenen NS.
+      serviceMonitorSelectorNilUsesHelmValues: false
+      serviceMonitorSelector: {}
+      serviceMonitorNamespaceSelector: {}
+
+      podMonitorSelectorNilUsesHelmValues: false
+      podMonitorSelector: {}
+      podMonitorNamespaceSelector: {}
+
+      retention: 15d
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          memory: 1Gi
+
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 20Gi
+            # storageClassName: standard   # ggf. eure StorageClass eintragen
+
+  # ---------------- Grafana ----------------
+  grafana:
+    enabled: true
+    adminPassword: "changeme"   # besser: über Secret/ExternalSecret einspielen!
+
+    persistence:
+      enabled: true
+      size: 5Gi
+
+    service:
+      type: ClusterIP   # per Ingress nach außen geben, siehe ingress.yaml
+
+    # Grafana bringt Prometheus als Datasource automatisch mit,
+    # weil sameNamespace-Datasource vom Chart automatisch angelegt wird.
+
+  # ---------------- Alertmanager (optional) ----------------
+  alertmanager:
+    enabled: true
+    alertmanagerSpec:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi

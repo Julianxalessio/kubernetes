@@ -41,6 +41,7 @@ kube-prometheus-stack:
   grafana:
     enabled: true
     adminPassword: "changeme"   # besser: über Secret/ExternalSecret einspielen!
+    defaultDashboardsEnabled: false   # deaktiviert ALLE mitgelieferten Standard-Dashboards
 
     persistence:
       enabled: true

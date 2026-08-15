@@ -9,7 +9,7 @@ spec:
   project: default
 
   source:
-    repoURL: https://github.com/DEIN-ORG/DEIN-REPO.git   # <-- anpassen
+    repoURL: https://github.com/julianxalessio/kubernetes.git   # <-- anpassen
     targetRevision: main                                  # <-- anpassen
     path: apps/monitoring                       # Ordner mit Chart.yaml
 

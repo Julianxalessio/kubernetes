@@ -88,22 +88,20 @@ spec:
             size: 10Gi
             storageClass: local-path
 
-        injector:
-          enabled: true
+          injector:
+            enabled: true
 
-        enabled: true
+          ui:
+            enabled: true
 
-        ui:
-          enabled: true
+          ingress:
+            enabled: true
+            ingressClassName: traefik
 
-        ingress:
-          enabled: true
-          ingressClassName: traefik
-
-          hosts:
-            - host: vault.infra.lomdev.ch
-              paths:
-                - /
+            hosts:
+              - host: vault.infra.lomdev.ch
+                paths:
+                  - /
   destination:
     server: https://kubernetes.default.svc
     namespace: vault

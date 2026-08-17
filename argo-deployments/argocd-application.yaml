@@ -57,15 +57,39 @@ kind: Application
 metadata:
   name: vault
   namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
 
   source:
-    repoURL: https://github.com/Julianxalessio/kubernetes.git 
-    targetRevision: main                                  
-    path: apps/vault         
+    repoURL: https://helm.releases.hashicorp.com
+    chart: vault
+    targetRevision: vault-1.13.0
+
+    helm:
+      releaseName: vault
+      valuesObject:
+        server:
+          enabled: true
+
+          ha:
+            enabled: true
+            replicas: 3
+
+          dataStorage:
+            enabled: true
+            size: 10Gi
+            storageClass: local-path
+
+          auditStorage:
+            enabled: true
+            size: 10Gi
+            storageClass: local-path
+
+        injector:
+          enabled: true
+
+        ui:
+          enabled: true
 
   destination:
     server: https://kubernetes.default.svc
@@ -75,6 +99,6 @@ spec:
     automated:
       prune: true
       selfHeal: true
+
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true 

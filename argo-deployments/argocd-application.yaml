@@ -101,7 +101,7 @@ spec:
           ingressClassName: traefik
 
           hosts:
-            - host: vault.example.com
+            - host: vault.infra.lomdev.ch
               paths:
                 - /
   destination:

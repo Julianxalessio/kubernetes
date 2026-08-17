@@ -24,3 +24,30 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true   # CRDs sind groß -> Server-Side Apply nötig
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: databases
+  namespace: databases
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/Julianxalessio/Databases-ArgoCD.git   
+    targetRevision: main                                  
+    path: .                   
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: databases
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true 

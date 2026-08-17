@@ -65,21 +65,36 @@ spec:
     chart: vault
     targetRevision: 0.34.1
 
-  helm:
-    valuesObject:
-      server:
+    helm:
+      releaseName: vault
+      valuesObject:
+        server:
+          enabled: true
+
+          ha:
+            enabled: true
+            replicas: 1
+
+            raft:
+              enabled: true
+
+          dataStorage:
+            enabled: true
+            size: 10Gi
+            storageClass: local-path
+
+          auditStorage:
+            enabled: true
+            size: 10Gi
+            storageClass: local-path
+
+        injector:
+          enabled: true
+
         enabled: true
 
-        ha:
+        ui:
           enabled: true
-          replicas: 1
-
-          raft:
-            enabled: true
-
-        dataStorage:
-          enabled: true
-          size: 10Gi
 
         ingress:
           enabled: true
@@ -89,12 +104,6 @@ spec:
             - host: vault.example.com
               paths:
                 - /
-
-          tls: [] 
-
-        ui:
-          enabled: true
-
   destination:
     server: https://kubernetes.default.svc
     namespace: vault

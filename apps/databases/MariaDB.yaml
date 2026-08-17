@@ -1,0 +1,149 @@
+# ============================================================
+# Secret
+# ============================================================
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mariadb-secret
+type: Opaque
+stringData:
+  root-password: "BBZbl12345!"
+  admin-password: "BBZbl12345!"
+
+---
+# ============================================================
+# PersistentVolumeClaim
+# ============================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mariadb-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+# ============================================================
+# Service
+# MariaDB bleibt von außen erreichbar
+# 144.24.232.203:10001 -> 3306
+# ============================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-service
+spec:
+  selector:
+    app: mariadb
+  type: LoadBalancer
+  loadBalancerIP: 144.24.232.203
+  ports:
+    - protocol: TCP
+      port: 10001
+      targetPort: 3306
+
+---
+# ============================================================
+# MariaDB Deployment
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb-deployment
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: mariadb
+
+  template:
+    metadata:
+      labels:
+        app: mariadb
+
+    spec:
+      containers:
+        - name: mariadb
+          image: mariadb:11.8.8-ubi9
+
+          ports:
+            - containerPort: 3306
+
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-secret
+                  key: root-password
+
+            - name: MARIADB_DATABASE
+              value: "test"
+
+          volumeMounts:
+            - name: mariadb-storage
+              mountPath: /var/lib/mysql
+
+      volumes:
+        - name: mariadb-storage
+          persistentVolumeClaim:
+            claimName: mariadb-pvc
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mariadb-secure-installation
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: mariadb-secure-installation
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: secure-installation
+          image: mariadb:11.8.8-ubi9
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-secret
+                  key: root-password
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-secret
+                  key: admin-password
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              echo "Warte auf MariaDB..."
+
+              until mariadb -h mariadb-service -P 10001 -u root -p"${MARIADB_ROOT_PASSWORD}" -e "SELECT 1"; do
+                echo "Waiting for MariaDB..."
+                sleep 5
+              done
+
+              echo "MariaDB ist bereit."
+              echo "Starte sichere Basiskonfiguration..."
+              mariadb -h mariadb-service -P 10001 -u root -p"${MARIADB_ROOT_PASSWORD}" -e "
+              CREATE USER IF NOT EXISTS 'admin'@'10.42.%' IDENTIFIED BY '${ADMIN_PASSWORD}';
+              GRANT ALL PRIVILEGES ON *.* TO 'admin'@'10.42.%' WITH GRANT OPTION;
+              FLUSH PRIVILEGES;
+              "
+              mariadb -h mariadb-service -P 10001 -u admin -p"${ADMIN_PASSWORD}" -e "
+                DELETE FROM mysql.user WHERE User='';
+                DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost','127.0.0.1','::1');
+                DROP DATABASE IF EXISTS test;
+                DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
+                FLUSH PRIVILEGES;
+              "
+
+              echo "Sichere Basiskonfiguration abgeschlossen."

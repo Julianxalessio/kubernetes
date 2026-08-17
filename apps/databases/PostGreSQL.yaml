@@ -1,0 +1,58 @@
+# PersistentVolumeClaim für die PostGreSQL-Datenbank, dass beim löschen des Pods die Daten nicht verloren gehen.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgresql-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+# Weiterleitung des Ports 3306 der PostGreSQL-Datenbank auf den Port 10003 des lokalen Rechners, damit man über den lokalen Rechner auf die Datenbank zugreifen kann.
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql-service
+spec:
+  selector:
+    app: postgresql
+  type: LoadBalancer
+  loadBalancerIP: 144.24.232.203
+  ports:
+    - protocol: TCP
+      port: 10003
+      targetPort: 5432
+---
+# Deployment für die PostGreSQL-Datenbank, die in einem Pod läuft. Das Deployment stellt sicher, dass immer die Anzahl an gewünschte Pods laufen. Der Pod wird mit einem PersistentVolumeClaim verbunden, um die Daten zu speichern.
+# Ebenfalls werden Umgebungsvariablen für das Root-Passwort und den Datenbanknamen gesetzt.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgresql-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql
+  template:
+    metadata:
+      labels:
+        app: postgresql
+    spec:
+      containers:
+        - name: postgresql
+          image: postgres:17.10-trixie
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_PASSWORD
+              value: "change-me"
+          volumeMounts:
+            - name: postgresql-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgresql-storage
+          persistentVolumeClaim:
+            claimName: postgresql-pvc

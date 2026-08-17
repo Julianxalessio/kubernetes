@@ -36,9 +36,9 @@ spec:
   project: default
 
   source:
-    repoURL: https://github.com/Julianxalessio/Databases-ArgoCD.git   
+    repoURL: https://github.com/Julianxalessio/kubernetes.git 
     targetRevision: main                                  
-    path: .                   
+    path: apps/databases         
 
   destination:
     server: https://kubernetes.default.svc

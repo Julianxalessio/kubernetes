@@ -4,7 +4,7 @@
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: database-secret
+  name: mariadb-secret
   namespace: databases-namespace
 spec:
   refreshInterval: 1h
@@ -14,7 +14,7 @@ spec:
     kind: SecretStore
 
   target:
-    name: database-secret
+    name: mariadb-secret
     creationPolicy: Owner
 
   data:

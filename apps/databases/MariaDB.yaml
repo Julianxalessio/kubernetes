@@ -77,7 +77,6 @@ metadata:
   name: mariadb-deployment
 spec:
   replicas: 1
-  serviceAccountName: sa-db
   selector:
     matchLabels:
       app: mariadb
@@ -86,6 +85,7 @@ spec:
     metadata:
       labels:
         app: mariadb
+    serviceAccountName: sa-db
 
     spec:
       containers:

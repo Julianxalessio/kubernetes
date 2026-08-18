@@ -85,9 +85,9 @@ spec:
     metadata:
       labels:
         app: mariadb
-    serviceAccountName: sa-db
 
-    spec:
+    spec:    
+      serviceAccountName: sa-db
       containers:
         - name: mariadb
           image: mariadb:11.8.8-ubi9

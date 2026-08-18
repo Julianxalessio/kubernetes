@@ -188,4 +188,4 @@ spec:
           role: "sa-db"
 
           serviceAccountRef:
-            name: "SA-DB"
+            name: "sa-db"

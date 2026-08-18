@@ -39,6 +39,12 @@ kube-prometheus-stack:
 
   # ---------------- Grafana ----------------
   grafana:
+    sidecar:
+      dashboards:
+        enabled: true
+        label: grafana_dashboard
+        labelValue: "1"
+        searchNamespace: ALL
     serviceAccount:
       create: true
       name: sa-grafana

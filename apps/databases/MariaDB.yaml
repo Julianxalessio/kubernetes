@@ -18,13 +18,15 @@ spec:
     creationPolicy: Owner
 
   data:
-    - secretKey: username
+    - secretKey: admin-password
       remoteRef:
-        key: ADMIN_PASSWORD
+        key: apps/databases/m141
+        property: ADMIN_PASSWORD
 
-    - secretKey: password
+    - secretKey: root-password
       remoteRef:
-        key: ROOT_PASSWORD
+        key: apps/databases/m141
+        property: ROOT_PASSWORD
 
 ---
 # ============================================================

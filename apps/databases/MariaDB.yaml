@@ -1,35 +1,4 @@
 # ============================================================
-# Secret
-# ============================================================
-apiVersion: external-secrets.io/v1
-kind: ExternalSecret
-metadata:
-  name: mariadb-secret
-  namespace: databases-namespace
-spec:
-  refreshInterval: 1h
-
-  secretStoreRef:
-    name: vault
-    kind: SecretStore
-
-  target:
-    name: mariadb-secret
-    creationPolicy: Owner
-
-  data:
-    - secretKey: admin-password
-      remoteRef:
-        key: apps/databases/m141
-        property: ADMIN_PASSWORD
-
-    - secretKey: root-password
-      remoteRef:
-        key: apps/databases/m141
-        property: ROOT_PASSWORD
-
----
-# ============================================================
 # PersistentVolumeClaim
 # ============================================================
 apiVersion: v1
@@ -42,7 +11,6 @@ spec:
   resources:
     requests:
       storage: 5Gi
-
 ---
 # ============================================================
 # Service
@@ -62,9 +30,10 @@ spec:
     - protocol: TCP
       port: 10001
       targetPort: 3306
-
 ---
-
+# ============================================================
+# Service Account für Vault-Auth
+# ============================================================
 apiVersion: v1
 kind: ServiceAccount
 metadata: 
@@ -115,8 +84,10 @@ spec:
         - name: mariadb-storage
           persistentVolumeClaim:
             claimName: mariadb-pvc
-
 ---
+# ============================================================
+# MariaDB Config Job
+# ============================================================
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -156,12 +127,14 @@ spec:
               done
 
               echo "MariaDB ist bereit."
-              echo "Starte sichere Basiskonfiguration..."
+              echo "Erstelle Admin-Benutzer und gewähre Berechtigungen..."
               mariadb -h mariadb-service -P 10001 -u root -p"${MARIADB_ROOT_PASSWORD}" -e "
-              CREATE USER IF NOT EXISTS 'admin'@'10.42.%' IDENTIFIED BY '${ADMIN_PASSWORD}';
-              GRANT ALL PRIVILEGES ON *.* TO 'admin'@'10.42.%' WITH GRANT OPTION;
-              FLUSH PRIVILEGES;
+                CREATE USER IF NOT EXISTS 'admin'@'10.42.%' IDENTIFIED BY '${ADMIN_PASSWORD}';
+                GRANT ALL PRIVILEGES ON *.* TO 'admin'@'10.42.%' WITH GRANT OPTION;
+                FLUSH PRIVILEGES;
               "
+
+              echo "Starte sichere Basiskonfiguration mit admin user..."
               mariadb -h mariadb-service -P 10001 -u admin -p"${ADMIN_PASSWORD}" -e "
                 DELETE FROM mysql.user WHERE User='';
                 DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost','127.0.0.1','::1');
@@ -172,11 +145,42 @@ spec:
 
               echo "Sichere Basiskonfiguration abgeschlossen."
 ---
+# ============================================================
+# External-Secret
+# ============================================================
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: mariadb-secret
+spec:
+  refreshInterval: 1h
+
+  secretStoreRef:
+    name: vault
+    kind: SecretStore
+
+  target:
+    name: mariadb-secret
+    creationPolicy: Owner
+
+  data:
+    - secretKey: admin-password
+      remoteRef:
+        key: apps/databases/m141
+        property: ADMIN_PASSWORD
+
+    - secretKey: root-password
+      remoteRef:
+        key: apps/databases/m141
+        property: ROOT_PASSWORD
+---
+# ============================================================
+# SecretStore für Vault (Authentifizierung via Kubernetes ServiceAccount und angabe wo vault ist)
+# ============================================================
 apiVersion: external-secrets.io/v1
 kind: SecretStore
 metadata:
   name: vault
-  namespace: databases-namespace
 spec:
   provider:
     vault:

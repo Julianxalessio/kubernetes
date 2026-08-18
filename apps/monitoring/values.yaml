@@ -40,7 +40,7 @@ kube-prometheus-stack:
   # ---------------- Grafana ----------------
   grafana:
     enabled: true
-    adminPassword: "changeme"   # besser: über Secret/ExternalSecret einspielen!
+    adminPassword: "1234"   # besser: über Secret/ExternalSecret einspielen!
     defaultDashboardsEnabled: false   # deaktiviert ALLE mitgelieferten Standard-Dashboards
 
     persistence:
@@ -48,7 +48,7 @@ kube-prometheus-stack:
       size: 5Gi
 
     service:
-      type: LoadBalancer   # ebenfalls über k3s ServiceLB, Port 80 im Service (siehe README)
+      type: ClusterIP   # ebenfalls über k3s ServiceLB, Port 80 im Service (siehe README)
 
     # Grafana bringt Prometheus als Datasource automatisch mit,
     # weil sameNamespace-Datasource vom Chart automatisch angelegt wird.

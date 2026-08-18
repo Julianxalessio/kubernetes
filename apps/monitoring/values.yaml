@@ -39,8 +39,14 @@ kube-prometheus-stack:
 
   # ---------------- Grafana ----------------
   grafana:
+    serviceAccount:
+      create: true
+      name: sa-grafana
+    admin:
+      existingSecret: grafana-admin
+      userKey: admin-user
+      passwordKey: admin-password
     enabled: true
-    adminPassword: "1234"   # besser: über Secret/ExternalSecret einspielen!
     defaultDashboardsEnabled: false   # deaktiviert ALLE mitgelieferten Standard-Dashboards
 
     persistence:

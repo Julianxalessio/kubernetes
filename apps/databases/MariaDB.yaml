@@ -66,7 +66,7 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata: 
-  name: SA-DB
+  name: sa-db
 ---
 # ============================================================
 # MariaDB Deployment
@@ -77,7 +77,7 @@ metadata:
   name: mariadb-deployment
 spec:
   replicas: 1
-  serviceAccountName: SA-DB
+  serviceAccountName: sa-db
   selector:
     matchLabels:
       app: mariadb
